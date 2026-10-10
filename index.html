@@ -16,7 +16,7 @@
   --paper:#f1f2ee; --card:#ffffff; --ink:#1f292d; --muted:#5c676b; --line:#dadfd9;
   --accent:#2f5d50; --accent-ink:#ffffff; --accent-soft:#e2ece7;
   --brass:#97763a; --brass-soft:#f3ecdc;
-  --wall:#e7e2d6; --window:#cfe0e6; --table:#b99a6b; --skin:#f2d6bf; --hair:#3b2a22; --dress:#7d93a8; --cup:#ffffff; --blush:#e48f9c;
+  --wall:#e7e2d6;
   --good:#2b8a57; --ok:#a8760c; --bad:#c2453e;
   --good-soft:#e3f3ea; --ok-soft:#f8efd9; --bad-soft:#f9e4e2;
   --f-display:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
@@ -26,14 +26,14 @@
   --paper:#121618; --card:#1a2023; --ink:#e4e8e6; --muted:#9aa5a6; --line:#2b3336;
   --accent:#7fc3ae; --accent-ink:#0f2620; --accent-soft:#1c312b;
   --brass:#d4b26f; --brass-soft:#2e2818;
-  --wall:#2a2823; --window:#1f3038; --table:#6e5a3e; --skin:#d9b89d; --hair:#1c1410; --dress:#4f6478; --cup:#dfe3e2;
+  --wall:#2a2823;
   --good:#5cc48a; --ok:#e0b04a; --bad:#ef7a72;
   --good-soft:#1c3327; --ok-soft:#332a14; --bad-soft:#3a1f1d; color-scheme:dark}}
 :root[data-theme="dark"]{
   --paper:#121618; --card:#1a2023; --ink:#e4e8e6; --muted:#9aa5a6; --line:#2b3336;
   --accent:#7fc3ae; --accent-ink:#0f2620; --accent-soft:#1c312b;
   --brass:#d4b26f; --brass-soft:#2e2818;
-  --wall:#2a2823; --window:#1f3038; --table:#6e5a3e; --skin:#d9b89d; --hair:#1c1410; --dress:#4f6478; --cup:#dfe3e2;
+  --wall:#2a2823;
   --good:#5cc48a; --ok:#e0b04a; --bad:#ef7a72;
   --good-soft:#1c3327; --ok-soft:#332a14; --bad-soft:#3a1f1d; color-scheme:dark}
 
@@ -89,7 +89,8 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 .phases li.done{border-color:var(--accent);color:var(--ink)}
 .phases li.now{border-color:var(--brass);color:var(--ink);font-weight:700}
 .scene{border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--wall);position:relative}
-.scene svg{display:block;width:100%;height:auto}
+.scene img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover}
+.hero-img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;border-radius:18px;border:1px solid var(--line)}
 .mood{position:absolute;top:10px;right:10px;background:var(--card);border-radius:99px;padding:4px 10px 4px 8px;font-size:12px;display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums;border:1px solid var(--line)}
 .mood-bar{width:64px;height:6px;border-radius:9px;background:var(--line);overflow:hidden}
 .mood-bar i{display:block;height:100%;background:var(--brass);transition:width .5s ease}
@@ -157,6 +158,7 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
 <div id="app">
   <!-- START -->
   <section class="stack" id="start">
+    <img class="hero-img" src="img/bg-table.jpg" alt="ホテルのロビーラウンジの、お見合いの席" width="1080" height="720">
     <div class="hero">
       <span class="eyebrow">結婚相談所 ・ 新規会員さん向け</span>
       <h1>お見合い本番シミュレーター</h1>
@@ -229,17 +231,17 @@ const GRADE = ['△ 気をつけたい','○ もう一歩','◎ いい対応'];
 const PHASES = ['到着','対面','注文','会話','締め','見送り','お返事'];
 
 const PERSONAS = [
-  {sei:'西村',mei:'優花',age:30,job:'歯科衛生士',hobby:'山歩き',home:'静岡',food:'お寿司',
+  {img:'p1',sei:'西村',mei:'優花',age:30,job:'歯科衛生士',hobby:'山歩き',home:'静岡',food:'お寿司',
    hobbyTalk:'友達に誘われて高尾山に登ったのがきっかけで、今は月に1回くらい山に行ってます。頂上で食べるおにぎりが最高なんです。'},
-  {sei:'森',mei:'さやか',age:28,job:'図書館司書',hobby:'読書',home:'長野',food:'お蕎麦',
+  {img:'p2',sei:'森',mei:'さやか',age:28,job:'図書館司書',hobby:'読書',home:'長野',food:'お蕎麦',
    hobbyTalk:'小さい頃から本が好きで、最近はミステリーばかり読んでます。犯人を当てるのが楽しくて。'},
-  {sei:'斎藤',mei:'恵',age:33,job:'管理栄養士',hobby:'料理',home:'福岡',food:'もつ鍋',
+  {img:'p3',sei:'斎藤',mei:'恵',age:33,job:'管理栄養士',hobby:'料理',home:'福岡',food:'もつ鍋',
    hobbyTalk:'休日に作り置きをするのが好きで。この前は初めて餃子を皮から作ったんです。'},
-  {sei:'岡田',mei:'葵',age:31,job:'アパレル販売',hobby:'美術館巡り',home:'仙台',food:'牛タン',
+  {img:'p4',sei:'岡田',mei:'葵',age:31,job:'アパレル販売',hobby:'美術館巡り',home:'仙台',food:'牛タン',
    hobbyTalk:'学生のころから好きで、企画展があるとつい行っちゃいます。この前は印象派の展示に行きました。'},
-  {sei:'吉田',mei:'奈々',age:29,job:'看護師',hobby:'国内旅行',home:'岡山',food:'海鮮丼',
+  {img:'p5',sei:'吉田',mei:'奈々',age:29,job:'看護師',hobby:'国内旅行',home:'岡山',food:'海鮮丼',
    hobbyTalk:'休みが取れたら国内旅行に行くんです。去年は金沢に行って、海鮮丼が忘れられなくて。'},
-  {sei:'井上',mei:'里奈',age:35,job:'経理',hobby:'テニス',home:'埼玉',food:'イタリアン',
+  {img:'p6',sei:'井上',mei:'里奈',age:35,job:'経理',hobby:'テニス',home:'埼玉',food:'イタリアン',
    hobbyTalk:'中学からずっと続けていて、今は週末に社会人サークルで打ってるんです。'}
 ];
 
@@ -529,44 +531,28 @@ const store = {
 let S = null;
 function show(id){ for (const s of ['start','play','report']) $('#'+s).hidden = s !== id; window.scrollTo(0,0); }
 
-/* ---------- scene illustration ---------- */
-function sceneSVG(){
-  const r = S ? S.rounds[S.idx] : null;
-  const present = S && S.met && !(r && r.alone && S.idx > 2);
-  const mood = S ? S.face : 2;
-  const mouth = mood === 2 ? 'M150 92 Q160 101 170 92' : mood === 1 ? 'M151 95 L169 95' : 'M151 98 Q160 91 169 98';
-  const brow = mood === 0 ? '<path d="M143 74 l9 2 M177 74 l-9 2" stroke="var(--hair)" stroke-width="2" stroke-linecap="round"/>' : '';
-  const blush = mood === 2 ? '<circle cx="141" cy="90" r="5" fill="var(--blush)" opacity=".4"/><circle cx="179" cy="90" r="5" fill="var(--blush)" opacity=".4"/>' : '';
-  const her = present ? `
-    <g>
-      <path d="M118 176 Q118 122 160 120 Q202 122 202 176 Z" fill="var(--dress)"/>
-      <rect x="152" y="104" width="16" height="18" fill="var(--skin)"/>
-      <path d="M126 92 Q124 46 160 44 Q196 46 194 92 Q196 124 184 128 L136 128 Q124 124 126 92 Z" fill="var(--hair)"/>
-      <ellipse cx="160" cy="84" rx="25" ry="28" fill="var(--skin)"/>
-      <path d="M135 76 Q140 52 160 54 Q182 54 186 76 Q170 64 150 66 Z" fill="var(--hair)"/>
-      <circle cx="150" cy="83" r="2.6" fill="var(--hair)"/><circle cx="170" cy="83" r="2.6" fill="var(--hair)"/>
-      ${brow}${blush}
-      <path d="${mouth}" stroke="var(--hair)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
-    </g>` : `
-    <g opacity=".5">
-      <rect x="128" y="104" width="64" height="72" rx="14" fill="var(--table)" opacity=".55"/>
-      <text x="160" y="96" text-anchor="middle" font-size="11" fill="var(--ink)">${S && S.met ? '' : 'まだ到着していません'}</text>
-    </g>`;
-  const cups = S && S.idx >= 5 && present ? `
-      <rect x="92" y="160" width="20" height="14" rx="3" fill="var(--cup)"/><path d="M112 164 q6 2 0 7" stroke="var(--cup)" stroke-width="2" fill="none"/>
-      <rect x="208" y="160" width="20" height="14" rx="3" fill="var(--cup)"/><path d="M228 164 q6 2 0 7" stroke="var(--cup)" stroke-width="2" fill="none"/>` : '';
-  return `<svg viewBox="0 0 320 200" role="img" aria-label="ホテルのラウンジの様子">
-    <rect width="320" height="200" fill="var(--wall)"/>
-    <rect x="16" y="16" width="96" height="96" rx="6" fill="var(--window)"/>
-    <rect x="208" y="16" width="96" height="96" rx="6" fill="var(--window)"/>
-    <path d="M64 16 V112 M16 64 H112 M256 16 V112 M208 64 H304" stroke="var(--wall)" stroke-width="3"/>
-    <rect x="0" y="112" width="320" height="4" fill="var(--brass)" opacity=".5"/>
-    ${her}
-    <ellipse cx="160" cy="182" rx="150" ry="22" fill="var(--table)"/>
-    ${cups}
-  </svg>
-  <div class="mood"><span>好印象</span><div class="mood-bar"><i style="width:${S ? S.aff : 50}%"></i></div><b>${S ? S.aff : 50}</b></div>
+/* ---------- scene picture ---------- */
+// Backgrounds before she arrives and on the way home, her standing at the lounge door
+// for the greeting and send-off, and seated with the expression of your last choice otherwise.
+const FACE = ['trouble','normal','smile'];
+function sceneSrc(){
+  const r = S.rounds[S.idx];
+  if (r.final) return 'img/bg-train.jpg';
+  if (!S.met) return S.idx === 0 ? 'img/bg-entrance.jpg' : 'img/bg-lounge-gate.jpg';
+  if (r.meet || r.phase === '見送り') return `img/${S.p.img}-greet.jpg`;
+  return `img/${S.p.img}-${FACE[S.face]}.jpg`;
+}
+function sceneHTML(){
+  const r = S.rounds[S.idx];
+  const present = S.met && !r.final;
+  // A missing expression falls back to the calm one, so a picture can be added later without code changes.
+  return `<img src="${sceneSrc()}" alt="${esc(r.loc)}の様子" width="1080" height="720" onerror="this.onerror=null;this.src=this.src.replace(/-(trouble|smile)\.jpg$/,'-normal.jpg')">
+  <div class="mood"><span>好印象</span><div class="mood-bar"><i style="width:${S.aff}%"></i></div><b>${S.aff}</b></div>
   ${present ? `<div class="who-tag">${esc(S.p.sei)} ${esc(S.p.mei)}さん・${S.p.age}歳・${esc(S.p.job)}</div>` : ''}`;
+}
+function preload(p){
+  ['greet','normal','smile','trouble'].forEach(f => { const i = new Image(); i.src = `img/${p.img}-${f}.jpg`; });
+  ['bg-entrance','bg-lounge-gate','bg-train'].forEach(f => { const i = new Image(); i.src = `img/${f}.jpg`; });
 }
 
 /* ---------- session ---------- */
@@ -596,7 +582,7 @@ function renderStep(){
   $('#clock').textContent = r.time;
   $('#loc').textContent = r.loc;
   renderPhases();
-  $('#scene').innerHTML = sceneSVG();
+  $('#scene').innerHTML = sceneHTML();
   let html = `<div class="step-title"><h2>${esc(r.title)}</h2><span>場面 ${S.idx+1} / ${S.rounds.length}</span></div>`;
   if (r.n) html += `<p class="narr">${esc(r.n)}</p>`;
   if (r.m) html += `<div class="line her"><span class="name">${esc(S.p.sei)}さん</span><p>${esc(r.m)}</p></div>`;
@@ -625,7 +611,7 @@ function choose(o){
       : `翌日、カウンセラーから連絡がありました。「${S.p.sei}さんからは、今回はお見送りとのお返事でした」。お返事のマナーは完璧でした。お見合い中の対応を振り返ってみましょう。`;
   } else reply = o.r || fill(pick(r.re[['bad','ok','good'][o.g]]), S.p);
 
-  $('#scene').innerHTML = sceneSVG();
+  $('#scene').innerHTML = sceneHTML();
   const her = !r.alone && S.met;
   let html = $('#dialog').innerHTML;
   html += `<div class="line you"><span class="name">あなた</span><p>${esc(o.t)}</p></div>`;
@@ -769,6 +755,7 @@ function renderStart(){
 function begin(persona){
   const hints = persona ? S.hints : $('#hints').checked;
   S = buildSession(hints, persona);
+  preload(S.p);
   $('#quitBtn').textContent = 'やめる';
   show('play');
   renderStep();
