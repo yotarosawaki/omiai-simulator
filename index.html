@@ -1,0 +1,789 @@
+<!doctype html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>[hidden]{display:none!important}body{margin:0}img{max-width:100%}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}</style>
+</head>
+<body>
+<title>お見合い本番シミュレーター</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Shippori+Mincho:wght@600;800&display=swap">
+<style>
+/* Layout: one column, hotel-lounge scene on top, dialogue card, choices below. Start → play → report. */
+:root{
+  --paper:#f1f2ee; --card:#ffffff; --ink:#1f292d; --muted:#5c676b; --line:#dadfd9;
+  --accent:#2f5d50; --accent-ink:#ffffff; --accent-soft:#e2ece7;
+  --brass:#97763a; --brass-soft:#f3ecdc;
+  --wall:#e7e2d6; --window:#cfe0e6; --table:#b99a6b; --skin:#f2d6bf; --hair:#3b2a22; --dress:#7d93a8; --cup:#ffffff; --blush:#e48f9c;
+  --good:#2b8a57; --ok:#a8760c; --bad:#c2453e;
+  --good-soft:#e3f3ea; --ok-soft:#f8efd9; --bad-soft:#f9e4e2;
+  --f-display:"Shippori Mincho","Hiragino Mincho ProN","Yu Mincho",serif;
+  --f-body:"Hiragino Sans","Hiragino Kaku Gothic ProN","Yu Gothic UI","Meiryo","Noto Sans JP",sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --paper:#121618; --card:#1a2023; --ink:#e4e8e6; --muted:#9aa5a6; --line:#2b3336;
+  --accent:#7fc3ae; --accent-ink:#0f2620; --accent-soft:#1c312b;
+  --brass:#d4b26f; --brass-soft:#2e2818;
+  --wall:#2a2823; --window:#1f3038; --table:#6e5a3e; --skin:#d9b89d; --hair:#1c1410; --dress:#4f6478; --cup:#dfe3e2;
+  --good:#5cc48a; --ok:#e0b04a; --bad:#ef7a72;
+  --good-soft:#1c3327; --ok-soft:#332a14; --bad-soft:#3a1f1d; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --paper:#121618; --card:#1a2023; --ink:#e4e8e6; --muted:#9aa5a6; --line:#2b3336;
+  --accent:#7fc3ae; --accent-ink:#0f2620; --accent-soft:#1c312b;
+  --brass:#d4b26f; --brass-soft:#2e2818;
+  --wall:#2a2823; --window:#1f3038; --table:#6e5a3e; --skin:#d9b89d; --hair:#1c1410; --dress:#4f6478; --cup:#dfe3e2;
+  --good:#5cc48a; --ok:#e0b04a; --bad:#ef7a72;
+  --good-soft:#1c3327; --ok-soft:#332a14; --bad-soft:#3a1f1d; color-scheme:dark}
+
+html,body{height:100%}
+body{background:var(--paper);color:var(--ink);font-family:var(--f-body);font-size:15px;line-height:1.7}
+#app{max-width:560px;margin:0 auto;min-height:100%;padding:20px 16px 48px;display:flex;flex-direction:column;gap:16px;box-sizing:border-box}
+h1,h2,h3{font-family:var(--f-display);font-weight:800;text-wrap:balance;margin:0}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.btn{border:0;border-radius:999px;padding:14px 22px;font-weight:700;font-size:16px}
+.btn-primary{background:var(--accent);color:var(--accent-ink)}
+.btn-ghost{background:transparent;border:1.5px solid var(--line)}
+.eyebrow{font-size:12px;letter-spacing:.14em;color:var(--brass);font-weight:700}
+.muted{color:var(--muted)}
+.stack{display:flex;flex-direction:column;gap:16px}
+.panel{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 16px;display:flex;flex-direction:column;gap:14px}
+.panel h2{font-size:18px}
+.chip{display:inline-flex;align-items:center;border-radius:99px;padding:3px 10px;font-size:12px;font-weight:700;background:var(--accent-soft)}
+
+/* start */
+.hero{display:flex;flex-direction:column;gap:10px}
+.hero h1{font-size:32px;line-height:1.3}
+.hero p{margin:0;color:var(--muted)}
+.flow{list-style:none;margin:0;padding:0;display:grid;grid-template-columns:repeat(4,1fr);gap:8px;counter-reset:f}
+.flow li{counter-increment:f;background:var(--paper);border:1px solid var(--line);border-radius:12px;padding:10px 8px;text-align:center;font-size:13px;font-weight:700;display:flex;flex-direction:column;gap:2px}
+.flow li::before{content:counter(f);font-family:var(--f-display);color:var(--brass);font-size:18px;line-height:1}
+.flow li small{font-weight:400;color:var(--muted);font-size:11px;line-height:1.4}
+@media (max-width:420px){.flow{grid-template-columns:repeat(2,1fr)}}
+.me-card{display:grid;grid-template-columns:auto 1fr;gap:4px 14px;font-size:14px}
+.me-card dt{color:var(--muted)}
+.me-card dd{margin:0}
+.toggle{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.toggle small{display:block;color:var(--muted);font-size:12.5px;line-height:1.5}
+.switch{position:relative;width:48px;height:28px;flex:none}
+.switch input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer;z-index:1}
+.switch span{position:absolute;inset:0;border-radius:99px;background:var(--line);transition:background .2s}
+.switch span::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:var(--card);box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.switch input:checked+span{background:var(--accent)}
+.switch input:checked+span::after{transform:translateX(20px)}
+.switch input:focus-visible+span{outline:3px solid var(--accent);outline-offset:2px}
+.history{list-style:none;margin:0;padding:0}
+.history li{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;padding:8px 0;border-bottom:1px dashed var(--line);font-variant-numeric:tabular-nums}
+.history li:last-child{border-bottom:0}
+.notice{font-size:12.5px;color:var(--muted)}
+
+/* play */
+.topbar{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.clock{font-family:var(--f-display);font-size:26px;font-weight:800;font-variant-numeric:tabular-nums;line-height:1}
+.loc{font-size:13px;color:var(--muted);flex:1;min-width:0}
+.quit{border:0;background:transparent;color:var(--muted);font-size:12.5px;padding:6px 2px}
+.phases{display:flex;gap:4px;list-style:none;margin:0;padding:0}
+.phases li{flex:1;text-align:center;font-size:11px;padding-top:6px;border-top:3px solid var(--line);color:var(--muted);white-space:nowrap;min-width:0;overflow:hidden;text-overflow:ellipsis}
+.phases li.done{border-color:var(--accent);color:var(--ink)}
+.phases li.now{border-color:var(--brass);color:var(--ink);font-weight:700}
+.scene{border-radius:18px;overflow:hidden;border:1px solid var(--line);background:var(--wall);position:relative}
+.scene svg{display:block;width:100%;height:auto}
+.mood{position:absolute;top:10px;right:10px;background:var(--card);border-radius:99px;padding:4px 10px 4px 8px;font-size:12px;display:flex;align-items:center;gap:6px;font-variant-numeric:tabular-nums;border:1px solid var(--line)}
+.mood-bar{width:64px;height:6px;border-radius:9px;background:var(--line);overflow:hidden}
+.mood-bar i{display:block;height:100%;background:var(--brass);transition:width .5s ease}
+.who-tag{position:absolute;left:10px;bottom:10px;background:var(--card);border-radius:10px;padding:4px 10px;font-size:12px;border:1px solid var(--line)}
+.dialog{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:16px;display:flex;flex-direction:column;gap:12px}
+.step-title{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.step-title h2{font-size:19px}
+.step-title span{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.narr{margin:0;color:var(--muted);font-size:14.5px}
+.line{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;animation:rise .25s ease-out}
+.line .name{font-size:12px;font-weight:700;padding:3px 8px;border-radius:8px;white-space:nowrap;margin-top:2px}
+.line.her .name{background:var(--brass-soft);color:var(--brass)}
+.line.you .name{background:var(--accent-soft);color:var(--accent)}
+.line.nar .name{background:var(--paper);color:var(--muted)}
+.line p{margin:0;overflow-wrap:anywhere}
+.line.her p{font-family:var(--f-display);font-size:16px;font-weight:600}
+.hint{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;font-size:13.5px;padding:10px 12px;border-radius:12px;background:var(--paper);animation:rise .25s ease-out}
+.grade{display:inline-block;font-weight:700;font-size:12px;border-radius:99px;padding:2px 9px;white-space:nowrap}
+.g2{background:var(--good-soft);color:var(--good)}
+.g1{background:var(--ok-soft);color:var(--ok)}
+.g0{background:var(--bad-soft);color:var(--bad)}
+.choices{display:flex;flex-direction:column;gap:10px}
+.choices-label{font-size:12.5px;color:var(--muted)}
+.choice{text-align:left;border:1.5px solid var(--line);background:var(--card);border-radius:14px;padding:12px 14px;font-size:14.5px;line-height:1.6;overflow-wrap:anywhere;transition:border-color .15s,background .15s;display:grid;grid-template-columns:auto 1fr;gap:10px}
+.choice b{font-family:var(--f-display);color:var(--brass);font-size:16px;line-height:1.5}
+.choice:hover{border-color:var(--accent)}
+.choice:active{background:var(--accent-soft)}
+@keyframes rise{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* report */
+.score-card{background:var(--card);border:1px solid var(--line);border-radius:20px;padding:22px 18px;display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
+.score-num{font-family:var(--f-display);font-size:58px;line-height:1;font-weight:800;font-variant-numeric:tabular-nums;color:var(--accent)}
+.score-num small{font-size:16px;color:var(--muted);margin-left:2px}
+.verdict{font-family:var(--f-display);font-weight:800;font-size:18px}
+.score-card p{margin:4px 0 0;font-size:13.5px;color:var(--muted)}
+.section-title{font-size:18px;display:flex;align-items:baseline;justify-content:space-between;gap:8px}
+.section-title small{font-family:var(--f-body);font-weight:400;font-size:12px;color:var(--muted)}
+.axis{display:grid;grid-template-columns:7.5em 1fr 3.2em;gap:10px;align-items:center;font-size:13.5px}
+.axis-bar{height:10px;border-radius:9px;background:var(--line);overflow:hidden}
+.axis-bar i{display:block;height:100%;border-radius:9px;background:var(--accent)}
+.axis-bar i.low{background:var(--ok)}
+.axis b{text-align:right;font-variant-numeric:tabular-nums}
+.timeline{list-style:none;margin:0;padding:0;display:flex;flex-direction:column}
+.timeline li{display:grid;grid-template-columns:3.4em 1fr auto;gap:10px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.timeline li:last-child{border-bottom:0}
+.timeline time{font-variant-numeric:tabular-nums;color:var(--muted);font-size:12.5px}
+.tip{border-radius:14px;padding:14px;background:var(--accent-soft);font-size:14px;display:flex;flex-direction:column;gap:4px}
+.tip b{font-family:var(--f-display)}
+.review{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:12px}
+.rv{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:8px;font-size:13.5px}
+.rv-head{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.rv-head h3{font-size:15px}
+.lbl{font-size:11.5px;font-weight:700;letter-spacing:.06em;color:var(--muted);display:block;margin-bottom:2px}
+.better{background:var(--good-soft);border-radius:10px;padding:8px 10px}
+.better .lbl{color:var(--good)}
+.check{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:14px}
+.check li{display:grid;grid-template-columns:4.2em 1fr;gap:10px}
+.check b{color:var(--brass);font-family:var(--f-display)}
+.actions{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.actions .wide{grid-column:1/-1}
+#copyArea{width:100%;min-height:120px;font:inherit;font-size:12.5px;border-radius:10px;border:1px solid var(--line);background:var(--paper);color:var(--ink);padding:10px;box-sizing:border-box}
+@media (prefers-reduced-motion: reduce){*{animation:none!important;transition:none!important}}
+</style>
+
+<div id="app">
+  <!-- START -->
+  <section class="stack" id="start">
+    <div class="hero">
+      <span class="eyebrow">結婚相談所 ・ 新規会員さん向け</span>
+      <h1>お見合い本番シミュレーター</h1>
+      <p>ホテルのラウンジで行われる1時間のお見合いを、男性の目線で体験します。会場への到着からお見送り、相談所へのお返事まで、全15場面を3択で進めます。</p>
+    </div>
+
+    <div class="panel">
+      <h2>お見合いの流れ</h2>
+      <ol class="flow">
+        <li>到着<small>15分前に会場へ</small></li>
+        <li>対面<small>挨拶と席への案内</small></li>
+        <li>注文<small>メニューは相手優先</small></li>
+        <li>会話<small>約50分の歓談</small></li>
+        <li>締め<small>1時間で切り上げ</small></li>
+        <li>会計<small>お茶代は男性が</small></li>
+        <li>見送り<small>出口までお見送り</small></li>
+        <li>お返事<small>当日中に相談所へ</small></li>
+      </ol>
+    </div>
+
+    <div class="panel">
+      <h2>あなたの設定</h2>
+      <dl class="me-card">
+        <dt>あなた</dt><dd>34歳・メーカー営業・千葉県出身</dd>
+        <dt>会場</dt><dd>ホテル1階 ロビーラウンジ（14:00開始）</dd>
+        <dt>お相手</dt><dd>毎回ちがう女性会員さん（架空の人物）</dd>
+      </dl>
+      <div class="toggle">
+        <div><b>その場でヒントを出す</b><small>選んだ直後に ◎ ○ △ と解説を表示します。慣れたらオフにして、本番のつもりで挑戦しましょう。</small></div>
+        <label class="switch"><input type="checkbox" id="hints" checked aria-label="その場でヒントを出す"><span></span></label>
+      </div>
+      <button class="btn btn-primary" id="startBtn" type="button">お見合いをはじめる</button>
+    </div>
+
+    <div class="panel" id="historyPanel" hidden>
+      <h2>これまでの記録 <small class="muted" style="font-family:var(--f-body);font-weight:400;font-size:12px">この端末だけに保存</small></h2>
+      <ul class="history" id="historyList"></ul>
+    </div>
+
+    <p class="notice">登場するお相手・会話はすべて練習用の架空のものです。毎回お相手と会話の話題が変わるので、何度でも練習できます。ルールは一般的な結婚相談所の例です。所属の相談所のルールも確認してください。</p>
+  </section>
+
+  <!-- PLAY -->
+  <section class="stack" id="play" hidden>
+    <div class="topbar">
+      <span class="clock" id="clock">13:40</span>
+      <span class="loc" id="loc">ホテル 正面エントランス</span>
+      <button class="quit" id="quitBtn" type="button">やめる</button>
+    </div>
+    <ol class="phases" id="phases"></ol>
+    <div class="scene" id="scene"></div>
+    <div class="dialog" id="dialog" aria-live="polite"></div>
+    <div class="choices" id="choices"></div>
+  </section>
+
+  <!-- REPORT -->
+  <section class="stack" id="report" hidden></section>
+</div>
+
+<script>
+const AX = {manner:'身だしなみ・時間', escort:'エスコート', listen:'聞き上手', talk:'話題選び', closing:'締めくくり'};
+const TIPS = {
+  manner:'会場には15分前に到着し、化粧室で髪・襟元・靴を確認。待っている間はスマホをしまい、入口が見える場所で背筋を伸ばして待ちましょう。',
+  escort:'奥のソファ席（上座）を相手に勧める、メニューを相手に向けて渡す、お茶代はさっと払う。男性のさりげないリードが安心感につながります。',
+  listen:'相手が話しているときは、うなずき＋「それでどうなったんですか？」で続きを促しましょう。相手が「私ばかり話して」と言っても、話を奪わないこと。',
+  talk:'プロフィールを読み込み、趣味・出身地・休日の過ごし方など答えやすい話題から。年収・過去の恋愛・結婚後の条件は、お見合いでは避けます。',
+  closing:'1時間で「楽しくてあっという間でした」と自分から切り上げ、出口までお見送り。連絡先の交換はせず、当日中に相談所へお返事を。'
+};
+const GRADE = ['△ 気をつけたい','○ もう一歩','◎ いい対応'];
+const PHASES = ['到着','対面','注文','会話','締め','見送り','お返事'];
+
+const PERSONAS = [
+  {sei:'西村',mei:'優花',age:30,job:'歯科衛生士',hobby:'山歩き',home:'静岡',food:'お寿司',
+   hobbyTalk:'友達に誘われて高尾山に登ったのがきっかけで、今は月に1回くらい山に行ってます。頂上で食べるおにぎりが最高なんです。'},
+  {sei:'森',mei:'さやか',age:28,job:'図書館司書',hobby:'読書',home:'長野',food:'お蕎麦',
+   hobbyTalk:'小さい頃から本が好きで、最近はミステリーばかり読んでます。犯人を当てるのが楽しくて。'},
+  {sei:'斎藤',mei:'恵',age:33,job:'管理栄養士',hobby:'料理',home:'福岡',food:'もつ鍋',
+   hobbyTalk:'休日に作り置きをするのが好きで。この前は初めて餃子を皮から作ったんです。'},
+  {sei:'岡田',mei:'葵',age:31,job:'アパレル販売',hobby:'美術館巡り',home:'仙台',food:'牛タン',
+   hobbyTalk:'学生のころから好きで、企画展があるとつい行っちゃいます。この前は印象派の展示に行きました。'},
+  {sei:'吉田',mei:'奈々',age:29,job:'看護師',hobby:'国内旅行',home:'岡山',food:'海鮮丼',
+   hobbyTalk:'休みが取れたら国内旅行に行くんです。去年は金沢に行って、海鮮丼が忘れられなくて。'},
+  {sei:'井上',mei:'里奈',age:35,job:'経理',hobby:'テニス',home:'埼玉',food:'イタリアン',
+   hobbyTalk:'中学からずっと続けていて、今は週末に社会人サークルで打ってるんです。'}
+];
+
+/* ---------- before the conversation ---------- */
+const BEFORE = [
+ {phase:'到着', title:'会場への到着', ax:['manner'], time:'13:40', loc:'ホテル 正面エントランス', alone:true,
+  narr:['今日は14:00から、ホテル1階のロビーラウンジでお見合いです。最寄り駅に着き、ホテルが見えてきました。','14:00開始のお見合い。電車が予定より早く着き、時刻は13:40です。'],
+  good:[
+   {t:'15分前にはホテルに入り、化粧室で髪・襟元・靴の汚れを確認する', f:'到着は15分前が目安です。化粧室で最終チェックをしておくと、落ち着いて相手を迎えられます。'},
+   {t:'先にラウンジの場所と入口を確かめてから、化粧室で身だしなみを整える', f:'下見をしておくと当日の動きがスムーズです。慌てずに相手を迎えられます。'}],
+  ok:[
+   {t:'14:00ちょうどにラウンジに着くよう、駅前で時間をつぶす', f:'遅刻ではありませんが、相手を待たせるかもしれません。男性は先に着いて迎えるのが基本です。'}],
+  bad:[
+   {t:'近くのコンビニで汗を拭きながら、ギリギリまで仕事のメールを返す', f:'ギリギリの行動は汗や焦りが表に出ます。仕事は事前に片付けておきましょう。'},
+   {t:'喫煙所で一服してから向かう', f:'タバコの匂いは想像以上に残ります。お見合い前は避けましょう。'}],
+  re:{good:['身だしなみも整い、13:47。落ち着いた気持ちでラウンジの前に立ちました。'], ok:['ラウンジに着くと13:59。少し息が上がっています。'], bad:['気づけば13:58。急いでラウンジへ向かいます。']}},
+
+ {phase:'到着', title:'相手を待つ間', ax:['manner','escort'], time:'13:50', loc:'ロビーラウンジ 入口', alone:true,
+  narr:['ラウンジ入口に着きました。相談所からは「入口付近で待ち合わせ」と聞いています。プロフィール写真の女性を探します。'],
+  good:[
+   {t:'スマホはしまい、入口が見える場所に立って背筋を伸ばして待つ', f:'相手が見つけやすく、第一印象も良くなります。'},
+   {t:'店員さんに「待ち合わせで2名です」と伝え、席の空きを確認しておく', f:'先に一言伝えておくと、合流後にスムーズに案内してもらえます。'}],
+  ok:[
+   {t:'入口近くのソファに座り、スマホでニュースを見ながら待つ', f:'悪くはありませんが、スマホに夢中だと相手が声をかけにくくなります。'}],
+  bad:[
+   {t:'先に席に着いてコーヒーを注文し、飲みながら待つ', f:'先に飲み始めていると、相手を迎える姿勢が伝わりません。注文は相手と一緒に。'},
+   {t:'腕を組み、足を組んで入口をじっと見張る', f:'腕組み・足組みは威圧的に見えます。'}],
+  re:{good:['少しして、写真で見覚えのある女性がロビーに入ってきました。'], ok:['ふと顔を上げると、女性がこちらを探すように見ていました。'], bad:['女性が近づいてきましたが、少し戸惑った様子です。']}},
+
+ {phase:'対面', title:'はじめの挨拶', ax:['manner','escort'], time:'13:55', loc:'ロビーラウンジ 入口', meet:true,
+  msg:['あの…お見合いの方でしょうか？はじめまして、{sei}です。'],
+  good:[
+   {t:'（立ち上がって笑顔で）「はじめまして、〇〇です。今日はお時間をいただきありがとうございます。迷われませんでしたか？」', f:'笑顔・お礼・気遣いの3点セット。最初の10秒で印象の多くが決まります。'},
+   {t:'「はじめまして、〇〇です。お会いできて嬉しいです。今日はよろしくお願いします」（軽く会釈）', f:'名乗り＋嬉しい気持ち＋会釈。シンプルで誠実な挨拶です。'}],
+  ok:[
+   {t:'「あ、どうも。〇〇です」', f:'失礼ではありませんが、緊張でそっけなく見えます。お礼の一言を添えましょう。'}],
+  bad:[
+   {t:'（座ったまま）「あ、どうも〜。写真と雰囲気ちがいますね」', f:'座ったままの挨拶と、写真との比較はNGです。相手を不安にさせます。'},
+   {t:'「遅かったですね、待ちましたよ」', f:'時間内に来ている相手を責める言い方です。男性が先に来て待つのは当たり前です。'}],
+  re:{good:['はい、案内がわかりやすくて大丈夫でした。こちらこそ、よろしくお願いします。'], ok:['あ…はい。よろしくお願いします。'], bad:['あ…すみません…。']}},
+
+ {phase:'対面', title:'席への案内', ax:['escort'], time:'13:57', loc:'ロビーラウンジ',
+  narr:['店員さんが「お二人様ですね、こちらへどうぞ」と、奥のソファ席と手前の椅子席が向かい合うテーブルに案内してくれました。'],
+  good:[
+   {t:'「よかったら、こちらのソファ席にどうぞ」と奥の席を勧め、自分は手前の椅子に座る', f:'奥のソファ席は上座です。相手に勧めるのが基本のエスコートです。'},
+   {t:'「お荷物、こちらのカゴに置けますよ」と声をかけ、奥の席へ促す', f:'さりげない気遣いが「この人は優しい」という印象につながります。'}],
+  ok:[
+   {t:'特に何も言わず、手前の椅子に座る', f:'問題はありませんが、上座を勧める一言でエスコート力が伝わります。'}],
+  bad:[
+   {t:'自分が先に奥のソファに座り、相手に手前の椅子を勧める', f:'奥のソファは上座です。相手に譲りましょう。'},
+   {t:'「どっち座ります？僕どっちでもいいんで」と相手に決めさせる', f:'相手に気を遣わせてしまいます。男性がリードしましょう。'}],
+  re:{good:['ありがとうございます。では、失礼します。'], ok:['…失礼します。'], bad:['あ、はい…。']}},
+
+ {phase:'注文', title:'飲み物の注文', ax:['escort','manner'], time:'14:00', loc:'ロビーラウンジ',
+  narr:['店員さんがメニューを持ってきました。コーヒーは1杯1,600円、ケーキセットは2,800円のホテル価格です。'],
+  good:[
+   {t:'メニューを相手に向けて渡し「何にされますか？よかったらケーキもどうぞ」と勧める', f:'メニューは相手が見やすい向きで。ケーキも勧めると、相手が遠慮しなくて済みます。'},
+   {t:'「僕はコーヒーにします。{sei}さんはゆっくり選んでくださいね」と相手を急かさない', f:'自分が先に決めておくと、相手もペースがつかみやすくなります。'}],
+  ok:[
+   {t:'自分の分だけ決めて店員さんを呼び、相手が決まるのを待つ', f:'注文はできますが、相手を急かしてしまうことも。メニューは相手優先で。'}],
+  bad:[
+   {t:'「ここ高いですね…。一番安いのでいいですよね？」', f:'金額の話は相手に気を遣わせます。お茶代は男性が持つ前提で、気持ちよく。'},
+   {t:'相手に聞かずに「アイスコーヒー2つで」と注文する', f:'相手の好みを聞かずに決めるのはNGです。'}],
+  re:{good:['ありがとうございます。じゃあ…紅茶とケーキをいただいてもいいですか？'], ok:['えっと…じゃあ、紅茶で。'], bad:['あ…はい、それで大丈夫です…。']}},
+
+ {phase:'会話', title:'最初のひと言', ax:['talk','listen'], time:'14:03', loc:'ロビーラウンジ',
+  narr:['飲み物が届くまで少し間があります。{sei}さんは少し緊張している様子です。'],
+  good:[
+   {t:'「今日は暖かくてよかったですね。ここまで電車で来られたんですか？」', f:'天気や移動のことなど、誰でも答えやすい話題から入ると緊張がほぐれます。', r:'はい、電車で。思ったより早く着いちゃって、ロビーを少し歩いてました。'},
+   {t:'「実は僕、すごく緊張してて…。{sei}さんもですか？」と笑顔で', f:'自分の緊張を正直に言うと、相手もほっとして場が和みます。', r:'実は私もです…（笑）よかった、ちょっと安心しました。'}],
+  ok:[
+   {t:'「えーっと…」と言葉を探しながら、相手が話し出すのを待つ', f:'相手に話題を任せると、沈黙が長くなりがちです。最初は男性からひと言を。'}],
+  bad:[
+   {t:'「さっそくですが、結婚したらどこに住みたいですか？」', f:'いきなり結婚後の条件の話は重すぎます。まずは雑談から。'},
+   {t:'「プロフィールでは{age}歳でしたよね。そろそろ焦ってますか？」', f:'年齢に触れる質問は相手を傷つけます。'}],
+  re:{good:['はい…！'], ok:['…あ、えっと、今日はいいお天気ですね。'], bad:['え…それは、まだちょっと…。']}}
+];
+
+/* ---------- conversation topics (5 of these each time) ---------- */
+const TALK = [
+ {title:'趣味の話を振る', ax:['talk','listen'],
+  narr:['飲み物が届き、少し場が落ち着きました。プロフィールには「趣味：{hobby}」と書いてありました。'],
+  good:[
+   {t:'「プロフィールに{hobby}がお好きとありましたが、始めたきっかけは何だったんですか？」', f:'プロフィールを読んできたことが伝わり、相手が自由に話せるオープンな質問です。'},
+   {t:'「{hobby}、いいですね！最近はどんなふうに楽しまれてるんですか？」', f:'「どんなふうに」は話を広げやすい質問です。相手が楽しく話せます。'}],
+  ok:[
+   {t:'「ご趣味は何ですか？」', f:'プロフィールに書いてあることを聞くと「読んでいないのかな」と思われます。'}],
+  bad:[
+   {t:'「{hobby}ですか。僕はあまり興味ないんですけど、僕の趣味はですね…」', f:'相手の趣味を流して自分の話に持っていくのはNGです。'}],
+  re:{good:['{hobbyTalk}'], ok:['あ、プロフィールにも書いたんですけど…{hobby}です。'], bad:['あ…そうなんですね。']}},
+
+ {title:'仕事について聞かれる', ax:['talk','listen'],
+  msg:['メーカーで営業をされているんですよね。どんなお仕事なんですか？'],
+  good:[
+   {t:'「工場で使う部品を扱っていて、お客さんの困りごとを聞いて提案する仕事です。人と話すのが好きなので合ってるなと。{sei}さんは{job}をされてるんですよね？」', f:'短くわかりやすく答え、やりがいを一言。最後に質問を返せています。'},
+   {t:'「会社の商品を企業さんに提案する仕事です。出張でいろんな街に行けるのが楽しみなんです」', f:'専門用語を使わず、楽しさが伝わる答え方です。'}],
+  ok:[
+   {t:'「普通の営業です。特に面白い話はないですね」', f:'謙遜しすぎると会話が止まります。'}],
+  bad:[
+   {t:'「営業です。成績は部内トップで、来年には課長になる予定です。年収も同世代では…」', f:'実績や年収の自慢は逆効果です。話の主役を相手にも渡しましょう。'},
+   {t:'「仕事の話はやめましょうよ。疲れるんで」', f:'相手の質問をはねつける言い方はNGです。'}],
+  re:{good:['わかりやすいです！人と話すのがお好きなの、伝わってきます。私は{job}をしていて…'], ok:['そうなんですね…。'], bad:['あ…すごいですね…。']}},
+
+ {title:'休日の過ごし方を聞かれる', ax:['talk','listen'],
+  msg:['お休みの日は、どんなふうに過ごされることが多いですか？'],
+  good:[
+   {t:'「土曜は掃除や買い物をして、日曜は散歩がてらカフェに行くことが多いです。{sei}さんは{hobby}以外だと何をされてますか？」', f:'具体的に答えると相手が想像しやすく、共通点も見つかります。'},
+   {t:'「最近料理を始めて、休日に少し凝ったものを作ってます。まだ失敗も多いんですけど（笑）」', f:'少し笑える失敗談は、親しみやすさにつながります。'}],
+  ok:[
+   {t:'「寝てることが多いですね…」', f:'正直でも、だらしない印象を与えかねません。小さなことでも具体的に。'}],
+  bad:[
+   {t:'「ゲームです。週末は朝まで、多いときは15時間くらいやってます」', f:'趣味自体は悪くありませんが、極端な話し方は生活ぶりが心配になります。'},
+   {t:'「休みの日は飲み会ですね。毎週潰れるまで飲んでます」', f:'お酒の失敗談は印象を下げます。'}],
+  re:{good:['いいですね！私も休日はカフェに行くことが多いです。'], ok:['そうなんですね（笑）'], bad:['え…そうなんですね…。']}},
+
+ {title:'出身地の話', ax:['talk','listen'],
+  msg:['ご出身はどちらなんですか？'],
+  good:[
+   {t:'「千葉です。海が近くて、子どもの頃はよく釣りをしてました。{sei}さんは{home}のご出身でしたよね。どんなところですか？」', f:'自分の話を少しして、相手の地元に興味を向ける。地元は誰でも話しやすい鉄板の話題です。'},
+   {t:'「千葉です。{sei}さんは{home}でしたよね。{home}、一度ゆっくり行ってみたいと思ってたんです」', f:'相手の地元に好意的に触れると、相手は嬉しくなります。'}],
+  ok:[
+   {t:'「千葉です」', f:'答えだけで終わると会話が止まります。'}],
+  bad:[
+   {t:'「千葉です。{home}って田舎ですよね？何もなさそう」', f:'相手の地元を下げる発言は大きなマイナスです。'}],
+  re:{good:['{home}は{food}が美味しいんですよ！帰省するといつも食べちゃいます。'], ok:['あ、千葉なんですね。'], bad:['…そうでもないですよ。']}},
+
+ {title:'沈黙になったとき', ax:['talk','listen'],
+  narr:['話が一段落し、10秒ほど沈黙が続いています。{sei}さんはカップに目を落としています。'],
+  good:[
+   {t:'「さっきの{hobby}のお話、もう少し聞いてもいいですか？」と前の話題に戻る', f:'沈黙は前の話題に戻ればOKです。相手の好きな話なら自然に盛り上がります。', r:'はい！{hobbyTalk}'},
+   {t:'「このケーキ美味しそうですね。{sei}さんは甘いものお好きですか？」', f:'目の前のものを話題にするのは、沈黙を破る簡単な方法です。', r:'大好きです！ここのケーキ、ずっと気になってたんです。'}],
+  ok:[
+   {t:'「…緊張しますね、ははは」と笑ってごまかす', f:'和ませようとする姿勢は良いですが、次の話題につなげましょう。'}],
+  bad:[
+   {t:'黙ってスマホを取り出し、時間を確認する', f:'お見合い中のスマホは「退屈している」と受け取られます。'},
+   {t:'「…話すことなくなっちゃいましたね」', f:'相手に気まずさを押しつける言い方です。'}],
+  re:{good:['はい！'], ok:['（笑）そうですね…。'], bad:['…（{sei}さんも気まずそうに黙ってしまいました）']}},
+
+ {title:'相談所に入った理由を聞かれる', ax:['talk'],
+  msg:['どうして結婚相談所に入ろうと思われたんですか？'],
+  good:[
+   {t:'「仕事が落ち着いてきて、そろそろ家庭を持ちたいと思うようになって。真剣に探すならここだと思いました」', f:'前向きで真剣な理由は、相手に安心感を与えます。'},
+   {t:'「友人が相談所で結婚して、すごく幸せそうだったんです。自分もちゃんと向き合おうと思って」', f:'具体的なきっかけがあると、話に説得力が出ます。'}],
+  ok:[
+   {t:'「親がうるさくて…。まあ、なんとなくです」', f:'後ろ向きな理由に聞こえます。前向きな言い方に変えましょう。'}],
+  bad:[
+   {t:'「前の彼女に振られて、見返してやろうと思って」', f:'過去の恋愛の話、特にネガティブな話はお見合いではNGです。'},
+   {t:'「職場がおじさんばっかりで、本当に出会いがないんですよ。最悪です」', f:'愚痴っぽく聞こえ、印象が下がります。'}],
+  re:{good:['素敵です。私も同じような気持ちで入りました。'], ok:['そうなんですね…。'], bad:['あ…そうなんですね…。']}},
+
+ {title:'好きな食べ物の話', ax:['talk'],
+  narr:['話が弾んできました。食べ物の話題を振ってみましょう。'],
+  good:[
+   {t:'「{sei}さんの好きな食べ物って何ですか？外食するならどんなお店に行きます？」', f:'食べ物の話は、交際後のデートの行き先にもつながる大事な話題です。'},
+   {t:'「最近美味しかったお店ってありますか？僕は先週行った定食屋さんが当たりで」', f:'自分の話を少し添えると、相手も答えやすくなります。'}],
+  ok:[
+   {t:'「嫌いな食べ物ってあります？」', f:'悪い質問ではありませんが、好きなものから聞いたほうが会話が明るくなります。'}],
+  bad:[
+   {t:'「料理はできますか？毎日作ってほしいタイプなんですよね」', f:'家事への期待を押しつけているように聞こえます。'}],
+  re:{good:['{food}が大好きなんです！{home}出身なので、つい地元と比べちゃって（笑）'], ok:['うーん、特にないですね。'], bad:['え…毎日、ですか…。']}},
+
+ {title:'相手が楽しそうに話しているとき', ax:['listen'],
+  narr:['{sei}さんが{hobby}の話を楽しそうにしています。'],
+  msg:['{hobbyTalk} …あ、すみません、私ばっかり話しちゃって。'],
+  good:[
+   {t:'「いえいえ、すごく楽しいです！それで、その後はどうなったんですか？」', f:'「楽しい」と伝えて続きを促す。話す側は気持ちよくなり、好印象につながります。'},
+   {t:'「{sei}さんが楽しそうに話すので、聞いていて楽しいです。僕もやってみたくなりました」', f:'相手の話を楽しんでいることを言葉にすると、相手は安心します。'}],
+  ok:[
+   {t:'「全然大丈夫ですよ」とだけ言って、コーヒーを飲む', f:'気遣いはできていますが、続きを促すと会話がもっと弾みます。'}],
+  bad:[
+   {t:'「じゃあ次は僕の番ですね。僕の趣味は…」と話を切り替える', f:'相手は遠慮しただけです。ここで話を奪うと「聞いてくれない人」になります。'},
+   {t:'「ほんとですよ（笑）」と冗談で返す', f:'冗談でも、相手は傷つきます。'}],
+  re:{good:['よかった…！それでですね…（{sei}さんの笑顔が増えました）'], ok:['すみません…。'], bad:['あ…すみません。']}},
+
+ {title:'お家派か外出派か', ax:['talk','listen'],
+  msg:['お休みの日は、お家派ですか？外に出かける派ですか？'],
+  good:[
+   {t:'「どちらも好きですけど、天気がいい日は出かけたくなります。{sei}さんは？」', f:'バランスの良い答えに質問を返す、お手本どおりの流れです。'},
+   {t:'「半々くらいですね。家で映画を観る日もあれば、ふらっと出かける日もあります。{sei}さんは外派のイメージです」', f:'具体例と、相手への関心が伝わる一言です。'}],
+  ok:[
+   {t:'「家ですね」', f:'答えだけで終わると会話が止まります。'}],
+  bad:[
+   {t:'「家派です。外に出かける人の気持ちがわからないんですよね」', f:'相手が外派だった場合、否定されたように感じます。'}],
+  re:{good:['私はどちらかというと外派です。{hobby}もあるので（笑）'], ok:['そうなんですね。'], bad:['あ…私は結構出かけるほうで…。']}},
+
+ {title:'もっと相手を知りたいとき', ax:['talk'],
+  narr:['{sei}さんのことをもっと知りたくなりました。何を聞きますか？'],
+  good:[
+   {t:'「休みの日に、誰かと一緒にやってみたいことってありますか？」', f:'未来の楽しいことを想像できる質問です。交際後のデートのヒントにもなります。', r:'うーん…一緒に美味しいものを食べ歩きしたいです！'},
+   {t:'「最近、ちょっと嬉しかったことってありますか？」', f:'相手の人柄や価値観が自然に見える質問です。', r:'先週、職場で後輩にお礼を言われたことですかね（笑）'}],
+  ok:[
+   {t:'「好きなタイプってどんな人ですか？」', f:'悪くはありませんが、初対面では答えにくい質問です。'}],
+  bad:[
+   {t:'「前の恋人とはどうして別れたんですか？」', f:'過去の恋愛の話はお見合いでは厳禁です。'},
+   {t:'「結婚後も仕事は続けますか？家事は分担派ですか？」', f:'大切な話ですが、初対面で聞くと面接のようになります。交際が進んでから。'}],
+  re:{good:['はい！'], ok:['え…難しいですね（笑）'], bad:['え…それはちょっと…。']}},
+
+ {title:'旅行の話', ax:['talk','listen'],
+  msg:['旅行はお好きですか？'],
+  good:[
+   {t:'「好きです！去年は京都でお寺巡りをしました。{sei}さんは最近どこか行かれました？」', f:'具体的な思い出に質問を添える。旅行の話は好みや価値観が自然にわかります。'},
+   {t:'「好きです。特に温泉が好きで。{sei}さんは行ってみたい場所ありますか？」', f:'「行ってみたい場所」は、未来の話につながる良い質問です。'}],
+  ok:[
+   {t:'「あんまり行かないですね」', f:'正直でも、それだけだと会話が止まります。「でも興味はあります」と添えましょう。'}],
+  bad:[
+   {t:'「好きですよ。海外は30カ国行きました。おすすめはですね…」（旅行の話が10分続く）', f:'一方的に長く話すのはNGです。相手に話す時間を渡しましょう。'}],
+  re:{good:['私は北海道に行ってみたくて！冬の雪まつりが気になってます。'], ok:['そうなんですね。'], bad:['…（{sei}さんは相づちを打つだけになりました）']}},
+
+ {title:'相手の良いところを伝える', ax:['listen','talk'],
+  narr:['話していて、{sei}さんの丁寧な話し方や笑顔がとても素敵だと感じました。'],
+  good:[
+   {t:'「{sei}さんとお話ししてると、すごく落ち着きます。今日来てよかったです」', f:'雰囲気や内面を褒めると、素直に受け取ってもらえます。'},
+   {t:'「笑顔が素敵ですね。話していてこちらまで楽しくなります」', f:'笑顔を褒めるのは、外見でも嫌味のない褒め方です。'}],
+  ok:[
+   {t:'心の中で思うだけで、特に口には出さない', f:'伝えないと相手にはわかりません。一言でいいので言葉にしましょう。'}],
+  bad:[
+   {t:'「スタイルいいですよね。体重何キロですか？」', f:'体型への言及はセクハラと受け取られます。'}],
+  re:{good:['え…嬉しいです。私も、すごく話しやすい方だなと思ってました。'], ok:['（{sei}さんは紅茶を飲んでいます）'], bad:['…（表情が固まりました）']}}
+];
+
+/* ---------- closing ---------- */
+const AFTER = [
+ {phase:'締め', title:'お見合いの終わり方', ax:['closing'], time:'14:55', loc:'ロビーラウンジ',
+  narr:['気づけば開始から55分。話はまだ盛り上がっています。お見合いの目安は1時間です。'],
+  good:[
+   {t:'「楽しくてあっという間でした。お時間なので、そろそろ出ましょうか」と自分から切り出す', f:'盛り上がっているうちに終えるのがコツです。「もっと話したい」という余韻が次につながります。'},
+   {t:'「{hobby}のお話、本当に楽しかったです。続きはまたぜひ聞かせてください」と締める', f:'楽しかった話題に触れて締めると、相手の印象に残ります。'}],
+  ok:[
+   {t:'盛り上がっているので、そのまま1時間半まで話し続ける', f:'楽しくても長すぎると相手が疲れます。1時間で切り上げるのがマナーです。'}],
+  bad:[
+   {t:'「LINE交換しませんか？」とスマホを取り出す', f:'お見合いでの連絡先交換は、相談所のルールで禁止されています。交際成立後に。'},
+   {t:'「このあと、ご飯でもどうですか？」と誘う', f:'お見合い後にそのまま誘うのはNGです。次のデートは交際成立後に。'}],
+  re:{good:['本当にあっという間でした。今日はありがとうございました。'], ok:['（{sei}さんがそっと時計を見ました）'], bad:['あの…それは相談所のルールで…。']}},
+
+ {phase:'締め', title:'お会計', ax:['escort','closing'], time:'14:58', loc:'ロビーラウンジ',
+  narr:['席を立つタイミングです。テーブルに伝票が置かれています。合計は4,400円です。'],
+  good:[
+   {t:'伝票をさっと持ち「ここは僕に出させてください」とスマートに会計する', f:'お見合いのお茶代は男性が払うのが相談所の基本ルールです。さっと済ませると好印象です。'},
+   {t:'相手が化粧室に行っている間に、会計を済ませておく', f:'相手が財布を出す場面を作らない、スマートな方法です。'}],
+  ok:[
+   {t:'レジで払い、相手が財布を出したら「大丈夫です」と断る', f:'支払いはできていますが、相手が財布を出す前に済ませるとより自然です。'}],
+  bad:[
+   {t:'「じゃあ、2,200円ずつで」と割り勘にする', f:'お見合いでの割り勘はマナー違反とされています。'},
+   {t:'「ケーキを頼まれてましたよね？その分はお願いできますか」', f:'細かい精算は大きなマイナス印象になります。'}],
+  re:{good:['すみません、ごちそうさまでした。ありがとうございます。'], ok:['あ、ありがとうございます…ごちそうさまです。'], bad:['あ…はい。（財布を出しながら、少し驚いた表情です）']}},
+
+ {phase:'見送り', title:'お見送り', ax:['escort','closing'], time:'15:00', loc:'ホテル ロビー',
+  narr:['ラウンジを出ました。{sei}さんは駅の方向へ帰るようです。'],
+  good:[
+   {t:'ロビーの出口まで一緒に歩き「今日は本当にありがとうございました。気をつけてお帰りください」と見送る', f:'出口まで見送るのが基本です。最後の印象は、最初の印象と同じくらい大切です。'},
+   {t:'「楽しかったです。お気をつけて」と笑顔で一礼し、相手が見えなくなるまで見送る', f:'最後まで丁寧な姿勢が「大切にしてくれる人」という印象を残します。'}],
+  ok:[
+   {t:'ラウンジの出口で「じゃあ、ここで」と別れる', f:'失礼ではありませんが、ロビーの出口まで見送るともう一歩印象が良くなります。'}],
+  bad:[
+   {t:'「僕も駅なので一緒に行きましょう」と駅までついて行く', f:'お見合い後は別々に帰るのが基本です。相手が気持ちを整理する時間を奪います。'},
+   {t:'会計後すぐにスマホを見ながら「じゃ、お疲れ様でした」と立ち去る', f:'最後の振る舞いで、それまでの好印象が台無しになりかねません。'}],
+  re:{good:['こちらこそ、ありがとうございました。楽しかったです。（{sei}さんは会釈して帰っていきました）'], ok:['はい、ありがとうございました。'], bad:['あ…えっと、私ちょっと寄るところがあるので…。']}},
+
+ {phase:'お返事', title:'相談所へのお返事', ax:['closing','manner'], time:'15:30', loc:'帰りの電車', alone:true, final:true,
+  narr:['お見合いが終わりました。{sei}さんともう一度会ってみたいと感じています。'],
+  good:[
+   {t:'当日中に担当カウンセラーへ「交際希望」と、楽しかった点・印象に残った話を添えて連絡する', f:'お返事は当日〜翌日の昼までが一般的です。感想を添えると、カウンセラーを通じて相手に良い印象が伝わります。'},
+   {t:'帰りの電車で印象をメモし、その日のうちにカウンセラーへ交際希望を伝える', f:'記憶が新しいうちに整理しておくと、交際に入ってからの話題にも使えます。'}],
+  ok:[
+   {t:'少し考えたいので、2〜3日後に返事をする', f:'迷う気持ちはわかりますが、返事が遅いと相手を待たせます。期限内に連絡を。'}],
+  bad:[
+   {t:'SNSで{sei}さんの名前を検索して、直接メッセージを送る', f:'交際成立前の直接連絡はルール違反です。必ず相談所を通しましょう。'},
+   {t:'返事をせずに、相手からの連絡を待つ', f:'お返事は自分から相談所へ。連絡しないとお断りと同じ扱いになることもあります。'}],
+  re:{good:[], ok:['3日後に連絡すると、カウンセラーから「お返事が遅かったので、お相手が少し不安になっていたようです」と言われました。'], bad:['カウンセラーから「ルール違反になるので、今後は気をつけてください」と注意を受けました。']}}
+];
+
+/* ---------- helpers ---------- */
+const $ = s => document.querySelector(s);
+const rand = (a,b) => a + Math.floor(Math.random()*(b-a+1));
+const pick = a => a[Math.floor(Math.random()*a.length)];
+const shuffle = a => { a = a.slice(); for (let i=a.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [a[i],a[j]]=[a[j],a[i]]; } return a; };
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fill = (s,p) => s ? s.replace(/\{(\w+)\}/g, (m,k) => p[k] ?? m) : s;
+const pad = n => String(n).padStart(2,'0');
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const KEY = 'omiai-sim-history';
+const store = {
+  get(){ try { return JSON.parse(localStorage.getItem(KEY) || '[]'); } catch(e){ return []; } },
+  add(x){ try { const h = this.get(); h.unshift(x); localStorage.setItem(KEY, JSON.stringify(h.slice(0,10))); } catch(e){} }
+};
+
+let S = null;
+function show(id){ for (const s of ['start','play','report']) $('#'+s).hidden = s !== id; window.scrollTo(0,0); }
+
+/* ---------- scene illustration ---------- */
+function sceneSVG(){
+  const r = S ? S.rounds[S.idx] : null;
+  const present = S && S.met && !(r && r.alone && S.idx > 2);
+  const mood = S ? S.face : 2;
+  const mouth = mood === 2 ? 'M150 92 Q160 101 170 92' : mood === 1 ? 'M151 95 L169 95' : 'M151 98 Q160 91 169 98';
+  const brow = mood === 0 ? '<path d="M143 74 l9 2 M177 74 l-9 2" stroke="var(--hair)" stroke-width="2" stroke-linecap="round"/>' : '';
+  const blush = mood === 2 ? '<circle cx="141" cy="90" r="5" fill="var(--blush)" opacity=".4"/><circle cx="179" cy="90" r="5" fill="var(--blush)" opacity=".4"/>' : '';
+  const her = present ? `
+    <g>
+      <path d="M118 176 Q118 122 160 120 Q202 122 202 176 Z" fill="var(--dress)"/>
+      <rect x="152" y="104" width="16" height="18" fill="var(--skin)"/>
+      <path d="M126 92 Q124 46 160 44 Q196 46 194 92 Q196 124 184 128 L136 128 Q124 124 126 92 Z" fill="var(--hair)"/>
+      <ellipse cx="160" cy="84" rx="25" ry="28" fill="var(--skin)"/>
+      <path d="M135 76 Q140 52 160 54 Q182 54 186 76 Q170 64 150 66 Z" fill="var(--hair)"/>
+      <circle cx="150" cy="83" r="2.6" fill="var(--hair)"/><circle cx="170" cy="83" r="2.6" fill="var(--hair)"/>
+      ${brow}${blush}
+      <path d="${mouth}" stroke="var(--hair)" stroke-width="2.2" fill="none" stroke-linecap="round"/>
+    </g>` : `
+    <g opacity=".5">
+      <rect x="128" y="104" width="64" height="72" rx="14" fill="var(--table)" opacity=".55"/>
+      <text x="160" y="96" text-anchor="middle" font-size="11" fill="var(--ink)">${S && S.met ? '' : 'まだ到着していません'}</text>
+    </g>`;
+  const cups = S && S.idx >= 5 && present ? `
+      <rect x="92" y="160" width="20" height="14" rx="3" fill="var(--cup)"/><path d="M112 164 q6 2 0 7" stroke="var(--cup)" stroke-width="2" fill="none"/>
+      <rect x="208" y="160" width="20" height="14" rx="3" fill="var(--cup)"/><path d="M228 164 q6 2 0 7" stroke="var(--cup)" stroke-width="2" fill="none"/>` : '';
+  return `<svg viewBox="0 0 320 200" role="img" aria-label="ホテルのラウンジの様子">
+    <rect width="320" height="200" fill="var(--wall)"/>
+    <rect x="16" y="16" width="96" height="96" rx="6" fill="var(--window)"/>
+    <rect x="208" y="16" width="96" height="96" rx="6" fill="var(--window)"/>
+    <path d="M64 16 V112 M16 64 H112 M256 16 V112 M208 64 H304" stroke="var(--wall)" stroke-width="3"/>
+    <rect x="0" y="112" width="320" height="4" fill="var(--brass)" opacity=".5"/>
+    ${her}
+    <ellipse cx="160" cy="182" rx="150" ry="22" fill="var(--table)"/>
+    ${cups}
+  </svg>
+  <div class="mood"><span>好印象</span><div class="mood-bar"><i style="width:${S ? S.aff : 50}%"></i></div><b>${S ? S.aff : 50}</b></div>
+  ${present ? `<div class="who-tag">${esc(S.p.sei)} ${esc(S.p.mei)}さん・${S.p.age}歳・${esc(S.p.job)}</div>` : ''}`;
+}
+
+/* ---------- session ---------- */
+function buildSession(hints, persona){
+  const p = persona || pick(PERSONAS);
+  const talkTimes = ['14:08','14:16','14:24','14:33','14:43'];
+  const talks = shuffle(TALK).slice(0,5).map((t,i) => ({...t, phase:'会話', time:talkTimes[i], loc:'ロビーラウンジ'}));
+  const raw = [...BEFORE, ...talks, ...AFTER];
+  const rounds = raw.map(r => ({
+    ...r,
+    n: r.narr ? fill(pick(r.narr), p) : null,
+    m: r.msg ? fill(pick(r.msg), p) : null,
+    opts: shuffle([{...pick(r.good),g:2},{...pick(r.ok),g:1},{...pick(r.bad),g:0}])
+      .map(o => ({...o, t:fill(o.t,p), f:fill(o.f,p), r:fill(o.r,p)}))
+  }));
+  return {hints, p, rounds, idx:0, log:[], aff:50, face:1, met:false, quitArmed:false};
+}
+
+function renderPhases(){
+  const cur = PHASES.indexOf(S.rounds[S.idx].phase);
+  $('#phases').innerHTML = PHASES.map((ph,i) => `<li class="${i<cur?'done':i===cur?'now':''}">${ph}</li>`).join('');
+}
+
+function renderStep(){
+  const r = S.rounds[S.idx];
+  if (r.meet) S.met = true;
+  $('#clock').textContent = r.time;
+  $('#loc').textContent = r.loc;
+  renderPhases();
+  $('#scene').innerHTML = sceneSVG();
+  let html = `<div class="step-title"><h2>${esc(r.title)}</h2><span>場面 ${S.idx+1} / ${S.rounds.length}</span></div>`;
+  if (r.n) html += `<p class="narr">${esc(r.n)}</p>`;
+  if (r.m) html += `<div class="line her"><span class="name">${esc(S.p.sei)}さん</span><p>${esc(r.m)}</p></div>`;
+  $('#dialog').innerHTML = html;
+  const c = $('#choices');
+  c.innerHTML = `<div class="choices-label">${r.m ? 'あなたはどう返しますか？' : 'あなたはどうしますか？'}</div>`;
+  r.opts.forEach((o,i) => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'choice';
+    b.innerHTML = `<b>${'ABC'[i]}</b><span>${esc(o.t)}</span>`;
+    b.addEventListener('click', () => choose(o), {once:true});
+    c.appendChild(b);
+  });
+}
+
+function choose(o){
+  const r = S.rounds[S.idx];
+  const delta = o.g === 2 ? rand(6,9) : o.g === 1 ? rand(0,2) : -rand(8,12);
+  S.aff = Math.max(0, Math.min(100, S.aff + delta));
+  S.face = o.g;
+  S.log.push({r, o});
+  let reply;
+  if (r.final && o.g === 2){
+    reply = S.aff >= 65
+      ? `その夜、カウンセラーから連絡がありました。「${S.p.sei}さんからも交際希望のお返事です！交際成立です」`
+      : `翌日、カウンセラーから連絡がありました。「${S.p.sei}さんからは、今回はお見送りとのお返事でした」。お返事のマナーは完璧でした。お見合い中の対応を振り返ってみましょう。`;
+  } else reply = o.r || fill(pick(r.re[['bad','ok','good'][o.g]]), S.p);
+
+  $('#scene').innerHTML = sceneSVG();
+  const her = !r.alone && S.met;
+  let html = $('#dialog').innerHTML;
+  html += `<div class="line you"><span class="name">あなた</span><p>${esc(o.t)}</p></div>`;
+  html += her ? `<div class="line her"><span class="name">${esc(S.p.sei)}さん</span><p>${esc(reply)}</p></div>`
+              : `<div class="line nar"><span class="name">その後</span><p>${esc(reply)}</p></div>`;
+  if (S.hints) html += `<div class="hint"><span class="grade g${o.g}">${GRADE[o.g]}</span><span>${esc(o.f)}</span></div>`;
+  $('#dialog').innerHTML = html;
+
+  const last = S.idx + 1 >= S.rounds.length;
+  $('#choices').innerHTML = `<button class="btn btn-primary" id="nextBtn" type="button">${last ? '振り返りレポートを見る' : '次の場面へ'}</button>`;
+  $('#nextBtn').addEventListener('click', () => {
+    if (last){ saveResult(); renderReport(); return; }
+    S.idx++; renderStep(); $('#play').scrollIntoView({behavior: RM ? 'auto' : 'smooth', block:'start'});
+  });
+  $('#dialog').scrollIntoView({behavior: RM ? 'auto' : 'smooth', block:'nearest'});
+}
+
+/* ---------- report ---------- */
+function calc(){
+  const ax = {}; for (const k in AX) ax[k] = {got:0, max:0};
+  let got = 0;
+  S.log.forEach(({r,o}) => { got += o.g; r.ax.forEach(k => { ax[k].got += o.g; ax[k].max += 2; }); });
+  const score = Math.round(got / (S.log.length*2) * 100);
+  const rank = score >= 90 ? 'S' : score >= 75 ? 'A' : score >= 55 ? 'B' : 'C';
+  const success = S.aff >= 65 && S.log[S.log.length-1].o.g === 2;
+  return {score, rank, ax, success};
+}
+function saveResult(){
+  const {score, rank, success} = calc(); const d = new Date();
+  store.add({date:`${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`, partner:`${S.p.sei}さん`, score, rank, success});
+}
+
+function renderReport(){
+  const {score, rank, ax, success} = calc();
+  const counts = [0,0,0]; S.log.forEach(({o}) => counts[o.g]++);
+  const weak = Object.keys(AX).filter(k => ax[k].max).map(k => ({k, r:ax[k].got/ax[k].max})).sort((a,b) => a.r-b.r).filter(a => a.r < 1).slice(0,2);
+  const rankText = {S:'お手本のようなお見合いでした。この調子で本番に臨みましょう。', A:'好印象のお見合いです。○や△の場面を見直せば、さらに安心感が増します。', B:'まずまずです。エスコートと「聞く姿勢」を意識すると印象が上がります。', C:'つまずきが多めでした。下の振り返りを読んで、もう一度挑戦しましょう。'}[rank];
+
+  const axisRows = Object.keys(AX).map(k => {
+    const a = ax[k]; const pct = a.max ? Math.round(a.got/a.max*100) : 0;
+    return `<div class="axis"><span>${AX[k]}</span><div class="axis-bar"><i class="${pct<60?'low':''}" style="width:${pct}%"></i></div><b>${a.max ? pct+'%' : '—'}</b></div>`;
+  }).join('');
+  const timeline = S.log.map(({r,o}) => `<li><time>${r.time}</time><span>${esc(r.title)}</span><span class="grade g${o.g}">${GRADE[o.g].split(' ')[0]}</span></li>`).join('');
+  const tips = weak.length
+    ? weak.map(w => `<div class="tip"><b>${AX[w.k]}を伸ばすには</b><span>${TIPS[w.k]}</span></div>`).join('')
+    : `<div class="tip"><b>すべての場面で◎です</b><span>ヒントをオフにして、別のお相手でも同じように対応できるか試してみましょう。</span></div>`;
+  const review = S.log.filter(({o}) => o.g < 2).map(({r,o}) => {
+    const best = r.opts.find(x => x.g === 2);
+    return `<li class="rv">
+      <div class="rv-head"><h3>${esc(r.title)}</h3><span class="grade g${o.g}">${GRADE[o.g]}</span></div>
+      <div><span class="lbl">あなたの対応</span>${esc(o.t)}</div>
+      <div class="muted">${esc(o.f)}</div>
+      <div class="better"><span class="lbl">こうすると◎</span>${esc(best.t)}<div class="muted" style="margin-top:4px">${esc(best.f)}</div></div>
+    </li>`;
+  }).join('');
+
+  const d = new Date();
+  const summary = [
+    '【お見合い本番シミュレーター 結果】',
+    `日時：${d.getFullYear()}/${d.getMonth()+1}/${d.getDate()} ${pad(d.getHours())}:${pad(d.getMinutes())}`,
+    `お相手（架空）：${S.p.sei} ${S.p.mei}さん`,
+    `スコア：${score}点（ランク${rank}）　◎${counts[2]} ○${counts[1]} △${counts[0]}`,
+    `好印象：${S.aff}　結果：${success ? '交際成立' : 'お見送り'}`,
+    ...Object.keys(AX).filter(k => ax[k].max).map(k => `・${AX[k]}：${Math.round(ax[k].got/ax[k].max*100)}%`),
+    '',
+    ...S.log.map(({r,o}) => `${r.time} ${r.title}　${GRADE[o.g].split(' ')[0]}`)
+  ].join('\n');
+
+  $('#report').innerHTML = `
+    <div class="hero">
+      <span class="eyebrow">お見合い振り返りレポート</span>
+      <h1 style="font-size:26px">${esc(S.p.sei)}さんとのお見合い</h1>
+      <p>${d.getMonth()+1}月${d.getDate()}日 ・ 全${S.log.length}場面　◎${counts[2]}　○${counts[1]}　△${counts[0]}</p>
+    </div>
+    <div class="score-card">
+      <div class="score-num">${score}<small>点</small></div>
+      <div>
+        <div class="verdict">ランク${rank} ・ ${success ? '交際成立' : 'お見送り'}</div>
+        <p>好印象 ${S.aff}／100。${rankText}</p>
+      </div>
+    </div>
+    <div class="panel">
+      <h2 class="section-title">5つのポイント <small>選んだ対応から算出</small></h2>
+      <div class="stack" style="gap:12px">${axisRows}</div>
+    </div>
+    <div class="panel">
+      <h2 class="section-title">当日の流れ <small>13:40 到着〜お返事</small></h2>
+      <ol class="timeline">${timeline}</ol>
+    </div>
+    <div class="stack" style="gap:10px">
+      <h2 class="section-title">次に意識すること</h2>
+      ${tips}
+    </div>
+    ${review ? `<div class="stack" style="gap:10px"><h2 class="section-title">見直したい場面 <small>${counts[0]+counts[1]}場面</small></h2><ol class="review">${review}</ol></div>` : ''}
+    <div class="panel">
+      <h2>お見合い当日のチェックリスト</h2>
+      <ul class="check">
+        <li><b>到着</b><span>15分前に会場へ。化粧室で身だしなみを確認</span></li>
+        <li><b>対面</b><span>立ち上がって笑顔で名乗り、お礼を伝える</span></li>
+        <li><b>着席</b><span>奥のソファ席（上座）を相手に勧める</span></li>
+        <li><b>注文</b><span>メニューは相手に向けて。ケーキも勧める</span></li>
+        <li><b>会話</b><span>プロフィールの話題から。聞く7割・話す3割</span></li>
+        <li><b>避ける</b><span>年収・過去の恋愛・結婚後の条件・連絡先交換</span></li>
+        <li><b>締め</b><span>1時間で自分から切り上げ、お茶代は男性が</span></li>
+        <li><b>お返事</b><span>出口まで見送り、当日中に相談所へ連絡</span></li>
+      </ul>
+    </div>
+    <div class="panel">
+      <h2>担当カウンセラーに共有</h2>
+      <p class="muted" style="margin:0;font-size:13.5px">結果をコピーして、カウンセラーとのLINEなどに貼り付けられます。</p>
+      <button class="btn btn-ghost" id="copyBtn" type="button">結果をコピー</button>
+      <textarea id="copyArea" readonly hidden></textarea>
+    </div>
+    <div class="actions">
+      <button class="btn btn-primary wide" id="againNew" type="button">別のお相手でもう一度</button>
+      <button class="btn btn-ghost" id="againSame" type="button">同じお相手で再挑戦</button>
+      <button class="btn btn-ghost" id="toTop" type="button">トップへ</button>
+    </div>`;
+  show('report');
+
+  $('#copyBtn').addEventListener('click', e => {
+    const btn = e.currentTarget, ta = $('#copyArea');
+    ta.value = summary;
+    const done = () => { btn.textContent = 'コピーしました'; setTimeout(() => btn.textContent = '結果をコピー', 2000); };
+    const fallback = () => { ta.hidden = false; ta.focus(); ta.select(); btn.textContent = '下の文章を選択してコピーしてください'; };
+    try { navigator.clipboard.writeText(summary).then(done, fallback); } catch(err){ fallback(); }
+  });
+  $('#againNew').addEventListener('click', () => begin());
+  $('#againSame').addEventListener('click', () => begin(S.p));
+  $('#toTop').addEventListener('click', renderStart);
+}
+
+/* ---------- start ---------- */
+function renderStart(){
+  const h = store.get();
+  $('#historyPanel').hidden = !h.length;
+  $('#historyList').innerHTML = h.slice(0,5).map(x =>
+    `<li><span>${esc(x.date)}　${esc(x.partner)}　${x.success ? '交際成立' : 'お見送り'}</span><b>${x.score}点（${esc(x.rank)}）</b></li>`).join('');
+  show('start');
+}
+function begin(persona){
+  const hints = persona ? S.hints : $('#hints').checked;
+  S = buildSession(hints, persona);
+  $('#quitBtn').textContent = 'やめる';
+  show('play');
+  renderStep();
+}
+$('#startBtn').addEventListener('click', () => begin());
+$('#quitBtn').addEventListener('click', e => {
+  if (!S.quitArmed){
+    S.quitArmed = true; e.currentTarget.textContent = '本当にやめる？';
+    const armed = S; setTimeout(() => { if (S === armed){ S.quitArmed = false; $('#quitBtn').textContent = 'やめる'; } }, 3000);
+    return;
+  }
+  S = null; renderStart();
+});
+renderStart();
+</script>
+
+</body>
+</html>
