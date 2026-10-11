@@ -199,6 +199,7 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
     </div>
 
     <p class="notice">登場するお相手・会話はすべて練習用の架空のものです。毎回お相手と会話の話題が変わるので、何度でも練習できます。ルールは一般的な結婚相談所の例です。所属の相談所のルールも確認してください。</p>
+    <p class="notice" data-analytics-note hidden>このページでは、利用状況を把握するために Google アナリティクスを使っています。名前などの個人情報は取得しません。</p>
   </section>
 
   <!-- PLAY -->
@@ -218,6 +219,7 @@ button:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
   <section class="stack" id="report" hidden></section>
 </div>
 
+<script src="analytics.js"></script>
 <script>
 const AX = {manner:'身だしなみ・時間', escort:'エスコート', listen:'聞き上手', talk:'話題選び', closing:'締めくくり'};
 const TIPS = {
@@ -646,6 +648,7 @@ function saveResult(){
 
 function renderReport(){
   const {score, rank, ax, success} = calc();
+  track('sim_complete', { sim: 'omiai', rank: rank, score: score });
   const counts = [0,0,0]; S.log.forEach(({o}) => counts[o.g]++);
   const weak = Object.keys(AX).filter(k => ax[k].max).map(k => ({k, r:ax[k].got/ax[k].max})).sort((a,b) => a.r-b.r).filter(a => a.r < 1).slice(0,2);
   const rankText = {S:'お手本のようなお見合いでした。この調子で本番に臨みましょう。', A:'好印象のお見合いです。○や△の場面を見直せば、さらに安心感が増します。', B:'まずまずです。エスコートと「聞く姿勢」を意識すると印象が上がります。', C:'つまずきが多めでした。下の振り返りを読んで、もう一度挑戦しましょう。'}[rank];
@@ -755,6 +758,7 @@ function renderStart(){
 function begin(persona){
   const hints = persona ? S.hints : $('#hints').checked;
   S = buildSession(hints, persona);
+  track('sim_start', { sim: 'omiai', hints: hints ? 1 : 0, retry: persona ? 1 : 0 });
   preload(S.p);
   $('#quitBtn').textContent = 'やめる';
   show('play');
@@ -767,6 +771,7 @@ $('#quitBtn').addEventListener('click', e => {
     const armed = S; setTimeout(() => { if (S === armed){ S.quitArmed = false; $('#quitBtn').textContent = 'やめる'; } }, 3000);
     return;
   }
+  track('sim_quit', { sim: 'omiai' });
   S = null; renderStart();
 });
 renderStart();
